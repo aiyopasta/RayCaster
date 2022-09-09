@@ -9,6 +9,7 @@
 from tkinter import *
 import numpy as np
 import copy
+import time
 
 # Window size. Note: 1920/2 = 960 will be the width of each half of the display (2D | 3D)
 window_w = 1700
@@ -29,9 +30,9 @@ ratio = cubesize / cellsize  # 3D to 2D (i.e. multiplication: 2D -> 3D)
 rows, cols = int(np.floor(window_h / cellsize)), int(np.floor((window_w / 2) / cellsize))
 
 # Player / camera variables
-pos = 230, 600 #np.array([window_w/4, window_h/2])
-dir = np.array([0, -1]) #np.array([-1., -1.]); dir /= np.linalg.norm(dir)
-focus = 40  # Keep this low!
+pos = 500, 600 #np.array([window_w/4, window_h/2])
+dir = np.array([-1., -1.]); dir /= np.linalg.norm(dir)
+focus = 35  # You can lower this more, but then make max cube height smaller too!
 tangent = np.array([-dir[1], dir[0]])
 screen = (window_w/2) / ratio
 radius = 15
@@ -85,31 +86,40 @@ class FilledSquare:
 
             xtemp = (minY - b)/m
             if minX <= xtemp <= maxX:
-                point = np.array([xtemp, minY])
+                temppoint = np.array([xtemp, minY])
+                if np.dot(raydir, temppoint-pos) > 0:
+                    point = temppoint
 
             xtemp = (maxY - b)/m
             if minX <= xtemp <= maxX:
-                point = closer(np.array([xtemp, maxY]), point, pos)
+                temppoint = closer(np.array([xtemp, maxY]), point, pos)
+                if np.dot(raydir, temppoint-pos) > 0:
+                    point = temppoint
 
             ytemp = (m * minX) + b
             if minY <= ytemp <= maxY:
-                point = closer(np.array([minX, ytemp]), point, pos)
+                temppoint = closer(np.array([minX, ytemp]), point, pos)
+                if np.dot(raydir, temppoint-pos) > 0:
+                    point = temppoint
 
             ytemp = (m * maxX) + b
             if minY <= ytemp <= maxY:
-                point = closer(np.array([maxX, ytemp]), point, pos)
+                temppoint = closer(np.array([maxX, ytemp]), point, pos)
+                if np.dot(raydir, temppoint-pos) > 0:
+                    point = temppoint
 
         return point
 
 
 # Grid storage (list of coords (row, col) corresponding to filled-in squares)
-coords = [[3, 3], [4, 3], [5, 3], [6, 3], [4, 6]]
-squares = [FilledSquare(*coord, cellsize) for coord in coords]
+coords = [[3, 3], [4, 3], [5, 3], [6, 3], [4, 6], [8, 5], [2, 7]]
+colors = ['orange', 'green', 'cyan', 'yellow', 'blue']
+squares = [FilledSquare(*coords[i], cellsize, color=colors[np.random.randint(len(colors))]) for i in range(len(coords))]
 
 
 # Main runner
 def runstep():
-    global dir, tangent
+    global pos, dir, tangent
 
     w.configure(background='black')
     w.delete('all')
@@ -117,18 +127,13 @@ def runstep():
     # Draw filled in squares
     for square in squares:
         x, y = square.col*cellsize, square.row*cellsize
-        w.create_rectangle(x, y, x+cellsize, y+cellsize, fill='blue')
+        w.create_rectangle(x, y, x+cellsize, y+cellsize, fill=square.color)
 
     # Draw grid
     for r in range(rows+1):
         w.create_line(0, r*cellsize, cols*cellsize, r*cellsize, fill='gray')
     for c in range(cols+1):
         w.create_line(c*cellsize, 0, c*cellsize, rows*cellsize, fill='gray')
-
-    # Draw player
-    w.create_oval(pos[0]-radius, pos[1]-radius, pos[0]+radius, pos[1]+radius, fill='green')
-    w.create_line(*pos, *(pos+(dir*pointer)), fill='white')
-    w.create_line(*(pos+(dir*focus)+(screen*tangent/2)), *(pos+(dir*focus)-(screen*tangent/2)), fill='cyan')
 
     w.create_line(window_w/2, window_h/2, window_w, window_h/2, fill='red')
     # ———————————————————————————————————————————————————————————————————————————————————————————————
@@ -147,6 +152,7 @@ def runstep():
             if not np.array_equal(tempPoint, point):
                 epicsquare = square
 
+
         if np.linalg.norm(point) < window_w:
             # w.create_oval(point[0]-10, point[1]-10, point[0]+10, point[1]+10, fill='red')
             w.create_line(*pos, *point, fill='red')
@@ -158,10 +164,13 @@ def runstep():
         if np.linalg.norm(point) < window_w:
             perpdist = (np.linalg.norm(np.dot(point - pos, dir)) - focus) * ratio
             height = min((500*cubesize) / perpdist, cubesize)
-            print(perpdist)
             w.create_line((window_w/2) + i, (-height/2) + (window_h/2), (window_w/2) + i, (height/2) + (window_h/2), fill=epicsquare.color)
 
-
+        # ———————————————————————————————————————————————————————————————————————————————————————————————
+        # Draw player
+        w.create_oval(pos[0] - radius, pos[1] - radius, pos[0] + radius, pos[1] + radius, fill='green')
+        w.create_line(*pos, *(pos + (dir * pointer)), fill='white')
+        w.create_line(*(pos + (dir * focus) + (screen * tangent / 2)), *(pos + (dir * focus) - (screen * tangent / 2)), fill='cyan', width='4')
 
     w.update()
 
