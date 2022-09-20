@@ -112,7 +112,7 @@ class FilledSquare:
 
 
 # Grid storage (list of coords (row, col) corresponding to filled-in squares)
-coords = [[3, 3], [4, 3], [5, 3], [6, 3], [4, 6], [8, 5], [2, 7]]
+coords = [[3, 3], [4, 3], [5, 3], [6, 3], [4, 6], [8, 5], [2, 7], [7, 7]]
 colors = ['orange', 'green', 'cyan', 'yellow', 'blue']
 squares = [FilledSquare(*coords[i], cellsize, color=colors[np.random.randint(len(colors))]) for i in range(len(coords))]
 
