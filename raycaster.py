@@ -12,8 +12,8 @@ import copy
 import time
 
 # Window size. Note: 1920/2 = 960 will be the width of each half of the display (2D | 3D)
-window_w = 1700
-window_h = 1000
+window_w = int(1700)
+window_h = int(1000)
 
 # Tkinter Setup
 root = Tk()
